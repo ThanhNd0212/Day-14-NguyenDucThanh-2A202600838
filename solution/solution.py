@@ -277,6 +277,55 @@ class RAGASEvaluator:
 
         return min(1.0, max(0.0, ap / num_relevant))
 
+    # -----------------------------------------------------------------------
+    # Bonus — Custom Metric: Factual Specificity
+    # -----------------------------------------------------------------------
+
+    def evaluate_specificity(self, answer: str, context: str) -> float:
+        """
+        BONUS METRIC — Factual Specificity: does the answer use specific
+        quantitative/named facts grounded in context?
+
+        Motivation (Sports domain): word-overlap metrics treat "the team won"
+        and "the Knicks won 105-95" equally. Specificity rewards answers that
+        include concrete numbers and proper nouns from the source.
+
+        Heuristic:
+            1. Extract "fact tokens" from answer: numeric patterns (scores,
+               dates, statistics) and capitalised proper-noun words.
+            2. Extract fact tokens from context the same way.
+            3. specificity = |answer_facts ∩ context_facts| / max(1, |answer_facts|)
+               → 1.0 means every specific claim in the answer is anchored in context.
+               → 0.0 means the answer has no specific facts, OR its facts are
+                  not found in context (hallucinated specifics).
+
+        Note: return 0.5 (neutral) when the answer contains no fact tokens at
+        all — vague answers are neither good nor bad on this metric alone.
+
+        Returns:
+            float in [0.0, 1.0]
+        """
+        # Numeric patterns: integers, decimals, hyphenated scores (e.g. 103-91)
+        num_pat = re.compile(r'\b\d[\d\.\-]*\d*\b')
+        # Proper nouns: words starting with uppercase NOT at sentence start
+        proper_pat = re.compile(r'(?<=[a-z]\s)([A-Z][a-zA-Z]+)|(?<=\d\s)([A-Z][a-zA-Z]+)')
+
+        def _fact_tokens(text: str) -> set[str]:
+            nums = {m.lower() for m in num_pat.findall(text)}
+            propers = {
+                (m.group(1) or m.group(2)).lower()
+                for m in proper_pat.finditer(text)
+            }
+            return nums | propers
+
+        answer_facts = _fact_tokens(answer)
+        if not answer_facts:
+            return 0.5  # neutral — vague answer, no facts to verify
+
+        context_facts = _fact_tokens(context)
+        grounded = answer_facts & context_facts
+        return min(1.0, max(0.0, len(grounded) / len(answer_facts)))
+
     def run_full_eval(
         self,
         answer: str,

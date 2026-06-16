@@ -1,0 +1,18 @@
+{
+  "total": 5,
+  "passed": 2,
+  "pass_rate": 0.4,
+  "avg_faithfulness": 1.0,
+  "avg_relevance": 0.43813131313131315,
+  "avg_completeness": 0.7392773892773893,
+  "failure_types": {
+    "off_topic": 2,
+    "irrelevant": 1
+  },
+  "thresholds": {
+    "faith_min": 0.35,
+    "relev_min": 0.35,
+    "comp_min": 0.5,
+    "pass_rate_min": 0.05
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "total": 5,
+  "passed": 1,
+  "pass_rate": 0.2,
+  "avg_faithfulness": 1.0,
+  "avg_relevance": 0.2952380952380952,
+  "avg_completeness": 0.9800000000000001,
+  "failure_types": {
+    "irrelevant": 3,
+    "off_topic": 1
+  }
+}
